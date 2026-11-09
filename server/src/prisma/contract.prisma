@@ -1,0 +1,88 @@
+// use prisma-8
+
+model User {
+  id                Int                @id @default(autoincrement())
+  email             String             @unique
+  username          String?
+  name              String?
+  posts             Post[]
+  createdAt         DateTime           @default(now()) @onCreate(now())
+  updatedAt         temporal.UpdatedAt
+  passwordHash      String?
+  sessions          Session[]
+  profile           Profile?
+  savedOpportunities SavedOpportunity[]
+  applications      Application[]
+}
+
+model Post {
+  id        Int      @id @default(autoincrement())
+  title     String
+  content   String?
+  author    User     @relation(fields: [authorId], references: [id])
+  authorId  Int
+  createdAt DateTime @default(now()) @onCreate(now())
+  updatedAt temporal.UpdatedAt
+}
+
+model Opportunity {
+  id           String             @id
+  title        String
+  type         String
+  provider     String
+  location     String
+  deadline     String
+  description  String
+  savedBy      SavedOpportunity[]
+  applications Application[]
+}
+
+model Session {
+  id        String @id
+  tokenHash String @unique
+  userId    Int
+  expiresAt String
+  user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Profile {
+  id           Int      @id @default(autoincrement())
+  userId       Int      @unique
+  state        String?
+  education    String?
+  category     String?
+  annualIncome String?
+  marks        String?
+  skills       String?
+  interests    String?
+  createdAt    DateTime @default(now()) @onCreate(now())
+  updatedAt    temporal.UpdatedAt
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model SavedOpportunity {
+  id            Int         @id @default(autoincrement())
+  userId        Int
+  opportunityId String
+  createdAt     DateTime    @default(now()) @onCreate(now())
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  opportunity   Opportunity @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, opportunityId])
+}
+
+model Application {
+  id            Int         @id @default(autoincrement())
+  userId        Int
+  opportunityId String
+  status        String      @default("Interested")
+  notes         String?
+  createdAt     DateTime    @default(now()) @onCreate(now())
+  updatedAt     temporal.UpdatedAt
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  opportunity   Opportunity @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, opportunityId])
+}
